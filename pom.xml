@@ -1,0 +1,125 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.entitysync</groupId>
+    <artifactId>entity-sync</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>entity-sync</name>
+    <url>http://maven.apache.org</url>
+
+    <properties>
+        <slf4j.version>1.7.25</slf4j.version>
+        <hibernate.version>4.1.6.Final</hibernate.version>
+        <hibernate-entitymanager.version>4.3.11.Final</hibernate-entitymanager.version>
+        <!--<spring.version>3.2.18.RELEASE</spring.version>-->
+        <spring.version>4.3.12.RELEASE</spring.version>
+
+        <log4j.version>2.9.1</log4j.version>
+        <jboss-logging.version>3.3.0.Final</jboss-logging.version>
+        <!--<spring-data-jpa.version>1.6.6.RELEASE</spring-data-jpa.version>-->
+        <spring-data-jpa.version>1.11.8.RELEASE</spring-data-jpa.version>
+        <h2.version>1.4.191</h2.version>
+        <!--<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
+    </properties>
+
+    <dependencies>
+
+        <!-- Compile Dependencies -->
+
+        <dependency>
+            <groupId>com.github.rholder</groupId>
+            <artifactId>guava-retrying</artifactId>
+            <version>2.0.0</version>
+        </dependency>
+
+        <!-- Spring -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-jpa</artifactId>
+            <version>${spring-data-jpa.version}</version>
+        </dependency>
+
+        <!-- Hibernate -->
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>${hibernate-entitymanager.version}</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Testing Dependencies -->
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+            <version>${jboss-logging.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Test Frameworks -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>${h2.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

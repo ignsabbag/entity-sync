@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration>
+    <Appenders>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%-5p %F:%L - %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- Log SQL statements -->
+        <Logger name="org.hibernate.SQL" level="debug" />
+
+        <!-- Log JDBC bind parameters -->
+        <!--<Logger name="org.hibernate.type.descriptor.sql" level="trace" />-->
+
+        <Logger name="com.entitysync" level="all"/>
+        <!--<Logger name="org.hibernate.type" level="trace"/>-->
+        <Root level="info">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+    </Loggers>
+</Configuration>
