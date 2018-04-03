@@ -51,10 +51,13 @@ public class SyncService implements ApplicationContextAware {
 
     private Retryer<Void> retryer;
 
+    private final Boolean syncEnabled;
+
     @Autowired
     public SyncService(EntityVersionRepository entityVersionRepository, SyncEntities syncEntities) {
         this.entityVersionRepository = entityVersionRepository;
         this.syncEntities = syncEntities;
+        syncEnabled = true;
     }
 
     /**
@@ -133,8 +136,11 @@ public class SyncService implements ApplicationContextAware {
         remoteEntities.sort(comparator);
         remoteEntities.forEach(entity -> updateEntity(entity, synchronizer, entityVersion));
 
-        //Igualo las versiones de la entidad
-        entityVersion.setCommitVersion(entityVersion.getUpdateVersion());
+        if (entityVersion.getUpdateVersion() > entityVersion.getCommitVersion()) {
+            log.debug("Actualizando CommitVersion, de " + entityVersion.getCommitVersion()
+                    + " a " + entityVersion.getUpdateVersion());
+            entityVersion.setCommitVersion(entityVersion.getUpdateVersion());
+        }
         return entityVersionRepository.save(entityVersion);
     }
 
@@ -155,8 +161,8 @@ public class SyncService implements ApplicationContextAware {
         entities.sort(comparator);
         entities.forEach(entity -> commitEntity(entity, synchronizer, entityVersion));
 
-        //La siguiente actualización puede fallar por bloqueo optimista,
-        //lo cual implica que las entidades se volveran a actualizar la proxima sincronizacion
+        log.debug("Actualizando UpdateVersion de " + entityVersion.getUpdateVersion()
+                + " a " + entityVersion.getCommitVersion());
         entityVersion.setUpdateVersion(entityVersion.getCommitVersion());
         entityVersionRepository.save(entityVersion);
     }

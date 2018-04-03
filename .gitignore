@@ -1,5 +1,5 @@
-.idea/**
 *.iml
-target/**
-data/**
-entitySync/**
+/.idea
+/target
+/data
+/entitySync
