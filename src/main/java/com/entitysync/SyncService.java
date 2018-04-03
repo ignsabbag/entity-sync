@@ -39,7 +39,7 @@ public class SyncService implements ApplicationContextAware {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private EntityVersionRepository entityVersionDao;
+    private EntityVersionRepository entityVersionRepository;
 
     private SyncEntities syncEntities;
 
@@ -51,8 +51,8 @@ public class SyncService implements ApplicationContextAware {
     private Retryer<Void> retryer;
 
     @Autowired
-    public SyncService(EntityVersionRepository entityVersionDao, SyncEntities syncEntities) {
-        this.entityVersionDao = entityVersionDao;
+    public SyncService(EntityVersionRepository entityVersionRepository, SyncEntities syncEntities) {
+        this.entityVersionRepository = entityVersionRepository;
         this.syncEntities = syncEntities;
     }
 
@@ -66,10 +66,10 @@ public class SyncService implements ApplicationContextAware {
         }
 
         entityManager.setFlushMode(FlushModeType.COMMIT);
-        AbstractEntityVersion entityVersion = entityVersionDao.getEntityVersion(object.getClass());
+        AbstractEntityVersion entityVersion = entityVersionRepository.getEntityVersion(object.getClass());
         if (entityVersion != null) {
             Long nextVersion = entityVersion.incCommitVersion();
-            entityVersionDao.save(entityVersion);
+            entityVersionRepository.save(entityVersion);
             return nextVersion;
         }
         return 1L;
@@ -114,7 +114,7 @@ public class SyncService implements ApplicationContextAware {
 
     Void syncEntitiesForClass(Class<?> entityClass) {
         DbContextHolder.clearDbType();
-        AbstractEntityVersion entityVersion = entityVersionDao.getEntityVersion(entityClass);
+        AbstractEntityVersion entityVersion = entityVersionRepository.getEntityVersion(entityClass);
         log.trace("Comenzando la sincronización de la entidad " + entityVersion.getEntity().toString());
 
         log.debug("Buscando entidades modificadas localmente...");
@@ -168,7 +168,7 @@ public class SyncService implements ApplicationContextAware {
 
         //Igualo las versiones de la entidad
         entityVersion.setCommitVersion(entityVersion.getUpdateVersion());
-        return entityVersionDao.save(entityVersion);
+        return entityVersionRepository.save(entityVersion);
     }
 
     private <T> void updateEntity(T entity, EntitySynchronizer<T> synchronizer, AbstractEntityVersion entityVersion) {
@@ -191,7 +191,7 @@ public class SyncService implements ApplicationContextAware {
         //La siguiente actualización puede fallar por bloqueo optimista,
         //lo cual implica que las entidades se volveran a actualizar la proxima sincronizacion
         entityVersion.setUpdateVersion(entityVersion.getCommitVersion());
-        entityVersionDao.save(entityVersion);
+        entityVersionRepository.save(entityVersion);
     }
 
     private <T> void commitEntity(T entity, EntitySynchronizer<T> synchronizer, AbstractEntityVersion entityVersion) {

@@ -1,15 +1,13 @@
-package com.entitysync;
+package com.entitysync.config;
 
-import com.entitysync.config.EnableSyncEntities;
-import com.entitysync.db.builder.SyncDataSourceBuilder;
 import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -20,42 +18,36 @@ import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 /**
- * Created by ignsabbag on 11/03/17.
+ * Created by ignsabbag on 02/04/18.
  */
 @Configuration
-@ComponentScan
-@EnableSyncEntities("com.entitysync.data")
-@EnableJpaRepositories("com.entitysync.data")
-public class TestConfiguration {
+@EnableJpaRepositories(basePackages = "com.entitysync.model",
+        entityManagerFactoryRef = "h2EntityManagerFactory",
+        transactionManagerRef = "h2TransactionManager")
+public class DefaultEntityVersionConfiguration {
 
     @Bean
-    @Primary
-    public DataSource dataSource() {
-        return new SyncDataSourceBuilder()
-                .localDataSource()
-                    .driverClassName("org.h2.Driver")
-                    .databaseUrl("jdbc:h2:./target/data/sync;IGNORECASE=TRUE;INIT=RUNSCRIPT FROM './src/test/resources/test_db.sql'")
-                    .username("sa")
-                    .password("sa")
-                    .and()
-                .centralDataSource()
-                    .driverClassName("org.h2.Driver")
-                    .databaseUrl("jdbc:h2:./target/data/sync_central;IGNORECASE=TRUE;INIT=RUNSCRIPT FROM './src/test/resources/test_db.sql'")
-                    .username("sa")
-                    .password("sa")
-                    .and().build();
+    public DataSource h2DataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+
+        dataSource.setDriverClassName("org.h2.Driver");
+        dataSource.setUrl("jdbc:h2:./entitySync/data;IGNORECASE=TRUE;INIT=RUNSCRIPT FROM 'classpath:init_db_h2.sql'");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("sa");
+
+        return dataSource;
     }
 
     @Bean
-    @Primary
     @Autowired
-    public EntityManagerFactory entityManagerFactory(DataSource dataSource) {
+    public EntityManagerFactory h2EntityManagerFactory(
+            @Qualifier("h2DataSource") DataSource dataSource) {
         LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
 
         //explicit set of Persistence provider to avoid a warning because of the deprecated default provider.
         factory.setPersistenceProvider(new HibernatePersistenceProvider());
         factory.setJpaVendorAdapter(jpaVendorAdapter());
-        factory.setPackagesToScan("com.entitysync.data");
+        factory.setPackagesToScan("com.entitysync.model");
         factory.setDataSource(dataSource);
         factory.getJpaPropertyMap().put("hibernate.ejb.naming_strategy", ImprovedNamingStrategy.class);
         factory.getJpaPropertyMap().put("hibernate.ejb.interceptor", "com.entitysync.SyncInterceptor");
@@ -75,16 +67,11 @@ public class TestConfiguration {
     }
 
     @Bean
-    @Primary
     @Autowired
-    public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
+    public PlatformTransactionManager h2TransactionManager(
+            @Qualifier("h2EntityManagerFactory") EntityManagerFactory entityManagerFactory) {
         JpaTransactionManager txManager = new JpaTransactionManager();
         txManager.setEntityManagerFactory(entityManagerFactory);
         return txManager;
     }
-
-/*    @Bean //For Spring 3.X
-    public HibernateExceptionTranslator hibernateExceptionTranslator(){
-        return new HibernateExceptionTranslator();
-    }*/
 }

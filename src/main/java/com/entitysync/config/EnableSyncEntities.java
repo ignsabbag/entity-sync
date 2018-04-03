@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-@Import(SyncBeanDefinitionRegistrar.class)
+@Import({ SyncBeanDefinitionRegistrar.class, DefaultEntityVersionConfiguration.class })
 public @interface EnableSyncEntities {
 
     String value();

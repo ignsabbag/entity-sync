@@ -27,6 +27,4 @@ To start using the library:
                 .and().build();
 ```
 
-Also, you need provide a entity witch extends **AbstractEntityVersion** and a repository that implements **EntityVersionRepository**.
-
 To sync a entity, add **@Sync** annotation. You must specify a class witch perform de entity update. It must be a spring bean and must implement **EntitySynchronizer**.
