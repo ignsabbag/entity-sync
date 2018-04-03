@@ -13,6 +13,7 @@ import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -39,7 +40,7 @@ public class SyncService implements ApplicationContextAware {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private EntityVersionRepository entityVersionDao;
+    private EntityVersionRepository entityVersionRepository;
 
     private SyncEntities syncEntities;
 
@@ -48,12 +49,17 @@ public class SyncService implements ApplicationContextAware {
 
     private ApplicationContext appContext;
 
+    private final List<Object> entitiesHolder;
     private Retryer<Void> retryer;
 
+    private final Boolean syncEnabled;
+
     @Autowired
-    public SyncService(EntityVersionRepository entityVersionDao, SyncEntities syncEntities) {
-        this.entityVersionDao = entityVersionDao;
+    public SyncService(EntityVersionRepository entityVersionRepository, SyncEntities syncEntities) {
+        entitiesHolder = Lists.newArrayList();
+        this.entityVersionRepository = entityVersionRepository;
         this.syncEntities = syncEntities;
+        syncEnabled = true;
     }
 
     /**
@@ -61,24 +67,26 @@ public class SyncService implements ApplicationContextAware {
      */
     @Transactional(propagation = Propagation.MANDATORY)
     synchronized Long getCommitVersion(Object object) {
-        if (!DbContextHolder.isLocalDbType() || EntitiesHolder.contains(object)) {
+        if (!DbContextHolder.isLocalDbType() || entitiesHolder.contains(object)) {
             return null;
         }
 
         entityManager.setFlushMode(FlushModeType.COMMIT);
-        AbstractEntityVersion entityVersion = entityVersionDao.getEntityVersion(object.getClass());
+        AbstractEntityVersion entityVersion = entityVersionRepository.getEntityVersion(object.getClass());
         if (entityVersion != null) {
             Long nextVersion = entityVersion.incCommitVersion();
-            entityVersionDao.save(entityVersion);
+            entityVersionRepository.save(entityVersion);
             return nextVersion;
         }
         return 1L;
     }
 
     public void syncScheduled() {
-        Thread thread = new Thread(this::syncNow);
-        thread.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
-        thread.start();
+        if (syncEnabled) {
+            Thread thread = new Thread(this::syncNow);
+            thread.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
+            thread.start();
+        }
     }
 
     /**
@@ -114,19 +122,19 @@ public class SyncService implements ApplicationContextAware {
 
     Void syncEntitiesForClass(Class<?> entityClass) {
         DbContextHolder.clearDbType();
-        AbstractEntityVersion entityVersion = entityVersionDao.getEntityVersion(entityClass);
+        AbstractEntityVersion entityVersion = entityVersionRepository.getEntityVersion(entityClass);
         log.trace("Comenzando la sincronización de la entidad " + entityVersion.getEntity().toString());
 
         log.debug("Buscando entidades modificadas localmente...");
         List dirtyEntities = loadEntities(entityVersion);
-        EntitiesHolder.clear();
-        EntitiesHolder.addAll(dirtyEntities);
+        entitiesHolder.clear();
+        entitiesHolder.addAll(dirtyEntities);
 
         log.debug("Buscando entidades modificadas remotamente...");
         List remoteEntities = doInCentral(() -> loadEntities(entityVersion));
 
         perform(entityVersion, dirtyEntities, remoteEntities);
-        EntitiesHolder.clear();
+        entitiesHolder.clear();
 
         return null;
     }
@@ -166,9 +174,12 @@ public class SyncService implements ApplicationContextAware {
         remoteEntities.sort(comparator);
         remoteEntities.forEach(entity -> updateEntity(entity, synchronizer, entityVersion));
 
-        //Igualo las versiones de la entidad
-        entityVersion.setCommitVersion(entityVersion.getUpdateVersion());
-        return entityVersionDao.save(entityVersion);
+        if (entityVersion.getUpdateVersion() > entityVersion.getCommitVersion()) {
+            log.debug("Actualizando CommitVersion, de " + entityVersion.getCommitVersion()
+                    + " a " + entityVersion.getUpdateVersion());
+            entityVersion.setCommitVersion(entityVersion.getUpdateVersion());
+        }
+        return entityVersionRepository.save(entityVersion);
     }
 
     private <T> void updateEntity(T entity, EntitySynchronizer<T> synchronizer, AbstractEntityVersion entityVersion) {
@@ -188,10 +199,10 @@ public class SyncService implements ApplicationContextAware {
         entities.sort(comparator);
         entities.forEach(entity -> commitEntity(entity, synchronizer, entityVersion));
 
-        //La siguiente actualización puede fallar por bloqueo optimista,
-        //lo cual implica que las entidades se volveran a actualizar la proxima sincronizacion
+        log.debug("Actualizando UpdateVersion de " + entityVersion.getUpdateVersion()
+                + " a " + entityVersion.getCommitVersion());
         entityVersion.setUpdateVersion(entityVersion.getCommitVersion());
-        entityVersionDao.save(entityVersion);
+        entityVersionRepository.save(entityVersion);
     }
 
     private <T> void commitEntity(T entity, EntitySynchronizer<T> synchronizer, AbstractEntityVersion entityVersion) {
