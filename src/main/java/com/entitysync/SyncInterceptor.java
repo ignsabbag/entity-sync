@@ -6,7 +6,6 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -14,7 +13,6 @@ import java.lang.reflect.Field;
 /**
  * Created by ignsabbag on 09/04/16.
  */
-@Component
 public class SyncInterceptor extends EmptyInterceptor {
 
     private static SyncService syncService;
