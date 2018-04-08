@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
@@ -29,7 +28,6 @@ import javax.sql.DataSource;
 public class TestConfiguration {
 
     @Bean
-    @Primary
     public DataSource dataSource() {
         return new SyncDataSourceBuilder()
                 .localDataSource()
@@ -47,9 +45,8 @@ public class TestConfiguration {
     }
 
     @Bean
-    @Primary
     @Autowired
-    public EntityManagerFactory entityManagerFactory(DataSource dataSource) {
+    public EntityManagerFactory entityManagerFactory(DataSource dataSource, SyncInterceptor syncInterceptor) {
         LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
 
         //explicit set of Persistence provider to avoid a warning because of the deprecated default provider.
@@ -58,7 +55,7 @@ public class TestConfiguration {
         factory.setPackagesToScan("com.entitysync.data");
         factory.setDataSource(dataSource);
         factory.getJpaPropertyMap().put("hibernate.ejb.naming_strategy", ImprovedNamingStrategy.class);
-        factory.getJpaPropertyMap().put("hibernate.ejb.interceptor", "com.entitysync.SyncInterceptor");
+        factory.getJpaPropertyMap().put("hibernate.ejb.interceptor", syncInterceptor);
         factory.afterPropertiesSet();
 
         return factory.getObject();
@@ -75,7 +72,6 @@ public class TestConfiguration {
     }
 
     @Bean
-    @Primary
     @Autowired
     public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
         JpaTransactionManager txManager = new JpaTransactionManager();

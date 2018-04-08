@@ -1,9 +1,14 @@
 package com.entitysync;
 
 import com.entitysync.annotations.Sync;
+import com.entitysync.db.DbContextHolder;
+import com.entitysync.model.AbstractEntityVersion;
+import com.entitysync.model.EntityVersionRepository;
 import com.entitysync.utils.EntityUtils;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.type.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotationUtils;
 
@@ -15,7 +20,9 @@ import java.lang.reflect.Field;
  */
 public class SyncInterceptor extends EmptyInterceptor {
 
-    private static SyncService syncService;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private EntityVersionRepository entityVersionRepository;
 
     @Override
     public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
@@ -32,9 +39,10 @@ public class SyncInterceptor extends EmptyInterceptor {
             Field field = EntityUtils.getCommitVersionField(entity);
             for (int i = 0; i < propertyNames.length; i++) {
                 if (field.getName().equals(propertyNames[i])) {
-                    Long commitVersion = syncService.getCommitVersion(entity);
+                    Long commitVersion = getCommitVersion(entity);
                     if (commitVersion != null) {
                         state[i] = commitVersion;
+                        log.debug("New version for entity {}: {}", entity.getClass().getName(), commitVersion);
                         return true;
                     }
                     break;
@@ -44,12 +52,31 @@ public class SyncInterceptor extends EmptyInterceptor {
         return false;
     }
 
+    /**
+     * Incrementa el numero de version de la tabla y retorna el valor para ser guardado en la entidad
+     */
+    private Long getCommitVersion(Object object) {
+        if (!DbContextHolder.isLocalDbType() || EntitiesHolder.contains(object.getClass())) {
+            return null;
+        }
+
+        synchronized (object.getClass()) {
+            AbstractEntityVersion entityVersion = entityVersionRepository.getEntityVersion(object.getClass());
+            if (entityVersion != null) {
+                Long nextVersion = entityVersion.incCommitVersion();
+                entityVersionRepository.save(entityVersion);
+                return nextVersion;
+            }
+        }
+        return 1L;
+    }
+
     private boolean isSynchronizedEntity(Object entity) {
         return AnnotationUtils.isAnnotationDeclaredLocally(Sync.class, entity.getClass());
     }
 
     @Autowired
-    public void setSyncService(SyncService syncService) {
-        SyncInterceptor.syncService = syncService;
+    public void setEntityVersionRepository(EntityVersionRepository entityVersionRepository) {
+        this.entityVersionRepository = entityVersionRepository;
     }
 }

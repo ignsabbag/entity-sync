@@ -38,7 +38,7 @@ public class SyncServiceTest {
         assertTrue(brand.getCommitVersion() > 0);
         Brand localBrand = assertBrandCreated(brand);
 
-        assertEquals(0, syncService.syncNow());
+        assertEquals(0, syncService.syncEntities());
         DbContextHolder.setDbType(DbType.CENTRAL);
         Brand centralBrand = assertBrandCreated(brand);
 
@@ -55,7 +55,7 @@ public class SyncServiceTest {
 
         Brand centralBrand = assertBrandCreated(brand);
 
-        assertEquals(0, syncService.syncNow());
+        assertEquals(0, syncService.syncEntities());
 
         DbContextHolder.setDbType(DbType.LOCAL);
         Brand localBrand = assertBrandCreated(brand);
@@ -76,7 +76,7 @@ public class SyncServiceTest {
         assertNotNull(brand.getId());
         assertBrandCreated(brand);
 
-        assertEquals(0, syncService.syncNow());
+        assertEquals(0, syncService.syncEntities());
     }
 
     private Brand assertBrandCreated(Brand brand) {

@@ -1,10 +1,5 @@
 package com.entitysync;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 /**
  * Created by ignsabbag on 05/03/17.
  */
@@ -12,18 +7,18 @@ enum EntitiesHolder {
 
     INSTANCE;
 
-    private final List<Object> entitiesHolder = Collections.synchronizedList(new ArrayList<>());
+    private final ThreadLocal<Class<?>> holder = new ThreadLocal<>();
 
-    static Boolean contains(Object object) {
-        return INSTANCE.entitiesHolder.contains(object);
+    static Boolean contains(Class<?> aClass) {
+        return INSTANCE.holder.get() != null && INSTANCE.holder.get().equals(aClass);
     }
 
-    static void clear() {
-        INSTANCE.entitiesHolder.clear();
+    static void set(Class<?> aClass) {
+        INSTANCE.holder.set(aClass);
     }
 
-    static void addAll(Collection<?> collection) {
-        INSTANCE.entitiesHolder.addAll(collection);
+    static void remove() {
+        INSTANCE.holder.remove();
     }
 
 }

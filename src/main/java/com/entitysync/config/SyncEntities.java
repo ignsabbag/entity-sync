@@ -1,7 +1,6 @@
 package com.entitysync.config;
 
 import com.entitysync.annotations.Sync;
-import com.entitysync.model.EntityVersionRepository;
 import com.entitysync.utils.EntityUtils;
 import com.entitysync.utils.SyncComparator;
 import com.google.common.collect.Lists;
@@ -22,7 +21,7 @@ public class SyncEntities {
     private final List<Class<?>> entitiesToSync;
 
     @Autowired
-    public SyncEntities(String basePackage, EntityVersionRepository entityVersionDao) {
+    public SyncEntities(String basePackage) {
         ClassPathScanningCandidateComponentProvider scanner =
                 new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(Sync.class));
@@ -33,7 +32,6 @@ public class SyncEntities {
                 .collect(Collectors.toList()));
 
         entitiesToSync.sort(new SyncComparator());
-//        entitiesToSync.forEach(entityVersionDao::getEntityVersion);
     }
 
     public List<Class<?>> getEntitiesToSync() {

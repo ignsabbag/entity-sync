@@ -20,10 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.*;
+import javax.persistence.EntityManager;
+import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -43,7 +44,7 @@ public class SyncService implements ApplicationContextAware {
 
     private SyncEntities syncEntities;
 
-    @PersistenceContext //(type = PersistenceContextType.EXTENDED)
+    @PersistenceContext
     private EntityManager entityManager;
 
     private ApplicationContext appContext;
@@ -57,44 +58,10 @@ public class SyncService implements ApplicationContextAware {
     }
 
     /**
-     * Incremente el numero de version de la tabla y retorna el valor para ser guardado en la entidad
-     */
-    @Transactional(propagation = Propagation.MANDATORY)
-    synchronized Long getCommitVersion(Object object) {
-        if (!DbContextHolder.isLocalDbType() || EntitiesHolder.contains(object)) {
-            return null;
-        }
-
-        entityManager.setFlushMode(FlushModeType.COMMIT);
-        AbstractEntityVersion entityVersion = entityVersionRepository.getEntityVersion(object.getClass());
-        if (entityVersion != null) {
-            Long nextVersion = entityVersion.incCommitVersion();
-            entityVersionRepository.save(entityVersion);
-            return nextVersion;
-        }
-        return 1L;
-    }
-
-    public void syncScheduled() {
-        Thread thread = new Thread(this::syncNow);
-        thread.setUncaughtExceptionHandler((t, e) -> log.error(e.getMessage(), e));
-        thread.start();
-    }
-
-    /**
      * Comprueba si hay entidades en la base de datos central, las actualiza y envia los cambios
      */
-    public int syncNow() {
-        try {
-            return syncEntities();
-        } catch (PersistenceException e) {
-            throw new RuntimeException("Ocurrió un error con la conexión a la base de datos.\n" +
-                    "Verifique la conexión a internet.", e);
-        }
-    }
-
-    private int syncEntities() {
-        log.info("Iniciando la sincrinización");
+    public int syncEntities() {
+        log.info("Iniciando la sincronización");
         int errors = 0;
         for (Class<?> entityClass : syncEntities.getEntitiesToSync()) {
             try {
@@ -105,6 +72,8 @@ public class SyncService implements ApplicationContextAware {
             } catch (ExecutionException e) {
                 errors++;
                 log.error("No se pudo sincronizar la entidad " + entityClass, e);
+            } finally {
+                EntitiesHolder.remove();
             }
         }
         log.info("Sincrinización finalizada: " + errors + " entidades con errores");
@@ -119,14 +88,12 @@ public class SyncService implements ApplicationContextAware {
 
         log.debug("Buscando entidades modificadas localmente...");
         List dirtyEntities = loadEntities(entityVersion);
-        EntitiesHolder.clear();
-        EntitiesHolder.addAll(dirtyEntities);
 
         log.debug("Buscando entidades modificadas remotamente...");
         List remoteEntities = doInCentral(() -> loadEntities(entityVersion));
 
+        EntitiesHolder.set(entityClass);
         perform(entityVersion, dirtyEntities, remoteEntities);
-        EntitiesHolder.clear();
 
         return null;
     }

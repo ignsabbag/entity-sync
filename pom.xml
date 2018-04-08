@@ -12,8 +12,7 @@
 
     <properties>
         <slf4j.version>1.7.25</slf4j.version>
-        <hibernate.version>4.1.6.Final</hibernate.version>
-        <hibernate-entitymanager.version>4.3.11.Final</hibernate-entitymanager.version>
+        <hibernate.version>4.3.11.Final</hibernate.version>
         <!--<spring.version>3.2.18.RELEASE</spring.version>-->
         <spring.version>4.3.12.RELEASE</spring.version>
 
@@ -46,17 +45,12 @@
             <artifactId>spring-orm</artifactId>
             <version>${spring.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-jpa</artifactId>
-            <version>${spring-data-jpa.version}</version>
-        </dependency>
 
         <!-- Hibernate -->
         <dependency>
             <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <version>${hibernate-entitymanager.version}</version>
+            <artifactId>hibernate-core</artifactId>
+            <version>${hibernate.version}</version>
         </dependency>
 
         <!-- Logging -->
@@ -95,10 +89,24 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- Tests Persistence -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
             <version>${spring.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-jpa</artifactId>
+            <version>${spring-data-jpa.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <version>${hibernate.version}</version>
             <scope>test</scope>
         </dependency>
 
