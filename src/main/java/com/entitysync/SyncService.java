@@ -51,13 +51,10 @@ public class SyncService implements ApplicationContextAware {
 
     private Retryer<Void> retryer;
 
-    private final Boolean syncEnabled;
-
     @Autowired
     public SyncService(EntityVersionRepository entityVersionRepository, SyncEntities syncEntities) {
         this.entityVersionRepository = entityVersionRepository;
         this.syncEntities = syncEntities;
-        syncEnabled = true;
     }
 
     /**
