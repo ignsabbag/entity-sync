@@ -2,7 +2,6 @@ package com.entitysync;
 
 import com.entitysync.config.EnableSyncEntities;
 import com.entitysync.db.builder.SyncDataSourceBuilder;
-import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -56,8 +55,10 @@ public class TestConfiguration {
         factory.setJpaVendorAdapter(jpaVendorAdapter());
         factory.setPackagesToScan("com.entitysync.data");
         factory.setDataSource(dataSource);
-        factory.getJpaPropertyMap().put("hibernate.ejb.naming_strategy", ImprovedNamingStrategy.class);
         factory.getJpaPropertyMap().put("hibernate.ejb.interceptor", syncInterceptor);
+//        factory.getJpaPropertyMap().put("javax.persistence.schema-generation.scripts.action", "drop-and-create");
+//        factory.getJpaPropertyMap().put("javax.persistence.schema-generation.scripts.create-target", "db-schema.jpa.ddl");
+//        factory.getJpaPropertyMap().put("javax.persistence.schema-generation.scripts.drop-target", "db-schema.jpa.ddl");
         factory.afterPropertiesSet();
 
         return factory.getObject();

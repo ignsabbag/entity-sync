@@ -11,8 +11,8 @@ import java.util.Set;
  * Created by nacho on 09/04/18.
  */
 @Entity
-@Sync(synchronizer = OrderSynchronizer.class, dependsOn = Product.class)
-public class Order {
+@Sync(synchronizer = CustomerOrderSynchronizer.class, dependsOn = Product.class)
+public class CustomerOrder {
 
     @Id
     @GeneratedValue
