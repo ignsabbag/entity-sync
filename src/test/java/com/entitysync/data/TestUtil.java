@@ -6,30 +6,20 @@ import com.entitysync.model.DefaultEntityVersionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 /**
  * Created by nacho on 22/11/17.
  */
 @Service
-public class BrandService {
+public class TestUtil {
 
     private final BrandRepository brandRepository;
 
     private final DefaultEntityVersionRepository entityVersionRepository;
 
     @Autowired
-    public BrandService(BrandRepository brandRepository, DefaultEntityVersionRepository entityVersionRepository) {
+    public TestUtil(BrandRepository brandRepository, DefaultEntityVersionRepository entityVersionRepository) {
         this.brandRepository = brandRepository;
         this.entityVersionRepository = entityVersionRepository;
-    }
-
-    public Brand save(Brand aBrand) {
-        return brandRepository.save(aBrand);
-    }
-
-    public List<Brand> findAll() {
-        return brandRepository.findAll();
     }
 
     public void deleteAll() {

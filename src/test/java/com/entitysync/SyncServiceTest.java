@@ -1,7 +1,8 @@
 package com.entitysync;
 
 import com.entitysync.data.Brand;
-import com.entitysync.data.BrandService;
+import com.entitysync.data.BrandRepository;
+import com.entitysync.data.TestUtil;
 import com.entitysync.db.DbContextHolder;
 import com.entitysync.db.DbType;
 import org.junit.Before;
@@ -20,20 +21,23 @@ import static org.junit.Assert.*;
 public class SyncServiceTest {
 
     @Autowired
-    private BrandService brandService;
+    private BrandRepository brandRepository;
+
+    @Autowired
+    private TestUtil testUtil;
 
     @Autowired
     private SyncService syncService;
 
     @Before
     public void initializeDb() {
-        brandService.deleteAll();
+        testUtil.deleteAll();
     }
 
     @Test
     public void testLocalChange() {
         Brand brand = new Brand("brand 1");
-        brandService.save(brand);
+        brandRepository.save(brand);
         assertNotNull(brand.getId());
         assertTrue(brand.getCommitVersion() > 0);
         Brand localBrand = assertBrandCreated(brand);
@@ -50,7 +54,7 @@ public class SyncServiceTest {
         DbContextHolder.setDbType(DbType.CENTRAL);
         Brand brand = new Brand("brand 1");
         brand.setCommitVersion(1L);
-        brandService.save(brand);
+        brandRepository.save(brand);
         assertNotNull(brand.getId());
 
         Brand centralBrand = assertBrandCreated(brand);
@@ -66,13 +70,13 @@ public class SyncServiceTest {
     @Test
     public void testBothChange() {
         Brand brand = new Brand("brand 1");
-        brandService.save(brand);
+        brandRepository.save(brand);
         assertNotNull(brand.getId());
         assertTrue(brand.getCommitVersion() > 0);
         assertBrandCreated(brand);
 
         DbContextHolder.setDbType(DbType.CENTRAL);
-        brandService.save(brand);
+        brandRepository.save(brand);
         assertNotNull(brand.getId());
         assertBrandCreated(brand);
 
@@ -80,7 +84,7 @@ public class SyncServiceTest {
     }
 
     private Brand assertBrandCreated(Brand brand) {
-        List<Brand> brands = brandService.findAll();
+        List<Brand> brands = brandRepository.findAll();
         assertNotNull(brands);
         assertEquals(1, brands.size());
         Brand otherBrand = brands.get(0);
