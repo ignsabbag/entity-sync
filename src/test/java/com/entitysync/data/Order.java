@@ -4,30 +4,25 @@ import com.entitysync.annotations.Sync;
 import com.entitysync.annotations.SyncVersion;
 import com.google.common.base.MoreObjects;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.Set;
 
 /**
- * Created by ignsabbag on 13/02/16.
+ * Created by nacho on 09/04/18.
  */
 @Entity
-@Sync(synchronizer = BrandSynchronizer.class)
-public class Brand {
-    @Id @GeneratedValue
+@Sync(synchronizer = OrderSynchronizer.class, dependsOn = Product.class)
+public class Order {
+
+    @Id
+    @GeneratedValue
     private Long id;
     @Column(nullable = false)
     private String name;
+    @OneToMany
+    private Set<Product> products;
     @SyncVersion
     private Long syncVersion;
-
-    public Brand() {
-    }
-
-    public Brand(String name) {
-        this.name = name;
-    }
 
     @Override
     public String toString() {
@@ -50,6 +45,14 @@ public class Brand {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Set<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(Set<Product> products) {
+        this.products = products;
     }
 
     public Long getSyncVersion() {

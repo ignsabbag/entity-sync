@@ -20,7 +20,19 @@ public class SyncComparator implements Comparator<Class<?>> {
         if (Arrays.asList(sync2.dependsOn()).contains(clazz1)) {
             return -1;
         }
-        return sync1.dependsOn().length - sync2.dependsOn().length;
+        for (Class<?> entityClass : sync1.dependsOn()) {
+            int result = compare(entityClass, clazz2);
+            if (result > 0) {
+                return result;
+            }
+        }
+        for (Class<?> entityClass : sync2.dependsOn()) {
+            int result = compare(clazz1, entityClass);
+            if (result < 0) {
+                return result;
+            }
+        }
+        return 0;
     }
 
 }
