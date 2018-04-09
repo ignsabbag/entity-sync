@@ -4,6 +4,7 @@ import com.entitysync.model.DefaultEntityVersion;
 import com.entitysync.model.DefaultEntityVersionRepository;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -19,6 +20,9 @@ import java.util.Properties;
 @Configuration
 public class DefaultEntityVersionConfiguration {
 
+    @Value("${entitysync.db.path:./entitySync/data}")
+    private String dbPath;
+
     @Bean
     public SessionFactory sessionFactory() {
         final LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(dataSource());
@@ -31,7 +35,7 @@ public class DefaultEntityVersionConfiguration {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
         dataSource.setDriverClassName("org.h2.Driver");
-        dataSource.setUrl("jdbc:h2:./entitySync/data");
+        dataSource.setUrl("jdbc:h2:" + dbPath);
         dataSource.setUsername("sa");
         dataSource.setPassword("sa");
 

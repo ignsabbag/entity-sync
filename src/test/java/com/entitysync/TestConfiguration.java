@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
@@ -22,6 +23,7 @@ import javax.sql.DataSource;
  * Created by ignsabbag on 11/03/17.
  */
 @Configuration
+@PropertySource("application.properties")
 @ComponentScan("com.entitysync.data")
 @EnableSyncEntities("com.entitysync.data")
 @EnableJpaRepositories("com.entitysync.data")
@@ -32,13 +34,13 @@ public class TestConfiguration {
         return new SyncDataSourceBuilder()
                 .localDataSource()
                     .driverClassName("org.h2.Driver")
-                    .databaseUrl("jdbc:h2:./target/data/sync;IGNORECASE=TRUE;INIT=RUNSCRIPT FROM './src/test/resources/test_db.sql'")
+                    .databaseUrl("jdbc:h2:./target/data/local;IGNORECASE=TRUE;INIT=RUNSCRIPT FROM './src/test/resources/test_db.sql'")
                     .username("sa")
                     .password("sa")
                     .and()
                 .centralDataSource()
                     .driverClassName("org.h2.Driver")
-                    .databaseUrl("jdbc:h2:./target/data/sync_central;IGNORECASE=TRUE;INIT=RUNSCRIPT FROM './src/test/resources/test_db.sql'")
+                    .databaseUrl("jdbc:h2:./target/data/central;IGNORECASE=TRUE;INIT=RUNSCRIPT FROM './src/test/resources/test_db.sql'")
                     .username("sa")
                     .password("sa")
                     .and().build();
