@@ -9,27 +9,31 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Finds and holds the list of entities to sync
  *
- * Created by ignsabbag on 08/05/16.
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class SyncEntities {
 
     private final List<Class<?>> entitiesToSync;
 
     @Autowired
-    public SyncEntities(String basePackage) {
+    public SyncEntities(Set<String> basePackages) {
         ClassPathScanningCandidateComponentProvider scanner =
                 new ClassPathScanningCandidateComponentProvider(false);
         scanner.addIncludeFilter(new AnnotationTypeFilter(Sync.class));
 
         entitiesToSync = Lists.newArrayList();
-        entitiesToSync.addAll(scanner.findCandidateComponents(basePackage).stream()
-                .map(bd -> EntityUtils.getEntityClass(bd.getBeanClassName()))
-                .collect(Collectors.toList()));
+        for (String basePackage : basePackages) {
+            entitiesToSync.addAll(scanner.findCandidateComponents(basePackage).stream()
+                    .map(bd -> EntityUtils.getEntityClass(bd.getBeanClassName()))
+                    .collect(Collectors.toList()));
+        }
 
         entitiesToSync.sort(new SyncComparator());
     }

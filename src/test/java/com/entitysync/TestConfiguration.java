@@ -22,9 +22,9 @@ import javax.sql.DataSource;
  * Created by ignsabbag on 11/03/17.
  */
 @Configuration
+@EnableSyncEntities
 @PropertySource("application.properties")
 @ComponentScan("com.entitysync.data")
-@EnableSyncEntities("com.entitysync.data")
 @EnableJpaRepositories("com.entitysync.data")
 public class TestConfiguration {
 
