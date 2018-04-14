@@ -34,11 +34,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 /**
- * Created by ignsabbag on 09/04/16.
+ * Service that allows to start entity synchronization
+ *
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class SyncService implements ApplicationContextAware {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private EntityVersionRepository entityVersionRepository;
 
@@ -58,25 +61,29 @@ public class SyncService implements ApplicationContextAware {
     }
 
     /**
-     * Comprueba si hay entidades en la base de datos central, las actualiza y envia los cambios
+     * Starts the synchronization. First check if there are entities
+     * in the central database, update them into local database
+     * and send to central database the local changes
+     *
+     * @return the number of entities that could not be synchronized
      */
     public int syncEntities() {
-        log.info("Iniciando la sincronización");
+        logger.info("Starting synchronization..");
         int errors = 0;
         for (Class<?> entityClass : syncEntities.getEntitiesToSync()) {
             try {
                 getRetryer().call(() -> syncEntitiesForClass(entityClass));
             } catch (RetryException e) {
                 errors++;
-                log.warn("No se pudo sincronizar la entidad " + entityClass, e);
+                logger.warn("The entity " + entityClass + "could not be synchronized", e);
             } catch (ExecutionException e) {
                 errors++;
-                log.error("No se pudo sincronizar la entidad " + entityClass, e);
+                logger.error("The entity " + entityClass + "could not be synchronized", e);
             } finally {
                 EntitiesHolder.remove();
             }
         }
-        log.info("Sincrinización finalizada: " + errors + " entidades con errores");
+        logger.info("Synchronization completed: " + errors + " entities with errors");
         return errors;
     }
 
@@ -84,12 +91,12 @@ public class SyncService implements ApplicationContextAware {
     Void syncEntitiesForClass(Class<?> entityClass) {
         DbContextHolder.clearDbType();
         AbstractEntityVersion entityVersion = entityVersionRepository.getEntityVersion(entityClass);
-        log.trace("Comenzando la sincronización de la entidad " + entityVersion.getEntity().toString());
+        logger.trace("Starting the synchronization of the entity " + entityVersion.getEntity().toString());
 
-        log.debug("Buscando entidades modificadas localmente...");
+        logger.debug("Searching for locally modified entities...");
         List dirtyEntities = loadEntities(entityVersion);
 
-        log.debug("Buscando entidades modificadas remotamente...");
+        logger.debug("Searching for remotely modified entities...");
         List remoteEntities = doInCentral(() -> loadEntities(entityVersion));
 
         EntitiesHolder.set(entityClass);
@@ -103,13 +110,13 @@ public class SyncService implements ApplicationContextAware {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery cq = cb.createQuery(entityVersion.getEntity());
         Root<?> entity = cq.from(entityVersion.getEntity());
-        String commitVersionField = EntityUtils.getCommitVersionField(entityVersion.getEntity()).getName();
+        String commitVersionField = EntityUtils.getSyncVersionField(entityVersion.getEntity()).getName();
         cq.where(
                 cb.or(
                         cb.greaterThan(entity.get(commitVersionField), entityVersion.getUpdateVersion()),
                         cb.isNull(entity.get(commitVersionField))));
         List result = entityManager.createQuery(cq).getResultList();
-        log.debug("Se encontraron " + result.size() + " entidad/es");
+        logger.debug(result.size() + " entities found");
         return result;
     }
 
@@ -117,34 +124,34 @@ public class SyncService implements ApplicationContextAware {
         //Filtro las entidades modificadas localmente
         remoteEntities.removeAll(dirtyEntities);
 
-        log.info("Actualizando " + remoteEntities.size() + " entidades modificadas remotamente");
+        logger.info("Updating " + remoteEntities.size() + " entities modified remotely");
         entityVersion = updateEntities(entityVersion, remoteEntities);
 
-        log.info("Actualizando " + dirtyEntities.size() + " entidades modificadas localmente");
+        logger.info("Updating " + dirtyEntities.size() + " entities modified locally");
         commitEntities(entityVersion, dirtyEntities);
     }
 
     @Transactional(rollbackFor = Throwable.class)
     private <T> AbstractEntityVersion updateEntities(AbstractEntityVersion entityVersion, List<T> remoteEntities) {
         EntitySynchronizer<T> synchronizer = getEntitySynchronizer(entityVersion.getEntity());
-        log.trace("Utilizando sincronizador: " + synchronizer.getClass().getName());
+        logger.trace("Using syncronizer: " + synchronizer.getClass().getName());
         Comparator<T> comparator = getEntityComparator(entityVersion.getEntity());
-        log.trace("Utilizando comparador: " + comparator.getClass().getName());
+        logger.trace("Using comparator: " + comparator.getClass().getName());
         remoteEntities.sort(comparator);
         remoteEntities.forEach(entity -> updateEntity(entity, synchronizer, entityVersion));
 
         if (entityVersion.getUpdateVersion() > entityVersion.getCommitVersion()) {
-            log.debug("Actualizando CommitVersion, de " + entityVersion.getCommitVersion()
-                    + " a " + entityVersion.getUpdateVersion());
+            logger.debug("Updating CommitVersion, from " + entityVersion.getCommitVersion()
+                    + " to " + entityVersion.getUpdateVersion());
             entityVersion.setCommitVersion(entityVersion.getUpdateVersion());
         }
         return entityVersionRepository.save(entityVersion);
     }
 
     private <T> void updateEntity(T entity, EntitySynchronizer<T> synchronizer, AbstractEntityVersion entityVersion) {
-        log.info("Actualizando entidad: " + entity.toString());
+        logger.info("Updating entity: " + entity.toString());
         synchronizer.updateEntity(entity);
-        Long commitVersion = EntityUtils.getCommitVersion(entity);
+        Long commitVersion = EntityUtils.getSyncVersion(entity);
         if (entityVersion.getUpdateVersion() < commitVersion) {
             entityVersion.setUpdateVersion(commitVersion);
         }
@@ -152,42 +159,40 @@ public class SyncService implements ApplicationContextAware {
 
     private <T> void commitEntities(AbstractEntityVersion entityVersion, List<T> entities) {
         EntitySynchronizer<T> synchronizer = getEntitySynchronizer(entityVersion.getEntity());
-        log.trace("Utilizando sincronizador: " + synchronizer.getClass().getName());
+        logger.trace("Using syncronizer: " + synchronizer.getClass().getName());
         Comparator<T> comparator = getEntityComparator(entityVersion.getEntity());
-        log.trace("Utilizando comparador: " + comparator.getClass().getName());
+        logger.trace("Using comparator: " + comparator.getClass().getName());
         entities.sort(comparator);
         entities.forEach(entity -> commitEntity(entity, synchronizer, entityVersion));
 
-        log.debug("Actualizando UpdateVersion de " + entityVersion.getUpdateVersion()
-                + " a " + entityVersion.getCommitVersion());
+        logger.debug("Updating UpdateVersion from " + entityVersion.getUpdateVersion()
+                + " to " + entityVersion.getCommitVersion());
         entityVersion.setUpdateVersion(entityVersion.getCommitVersion());
         entityVersionRepository.save(entityVersion);
     }
 
     private <T> void commitEntity(T entity, EntitySynchronizer<T> synchronizer, AbstractEntityVersion entityVersion) {
-        log.info("Actualizando entidad: " + entity.toString());
+        logger.info("Updating entity: " + entity.toString());
         Long nextVersion = entityVersion.incCommitVersion();
-        EntityUtils.setCommitVersion(entity, nextVersion);
+        EntityUtils.setSyncVersion(entity, nextVersion);
         doInCentral(() -> synchronizer.updateEntity(entity));
         synchronizer.updateEntity(entity);
     }
 
     private <T> EntitySynchronizer<T> getEntitySynchronizer(Class<?> entityClass) {
-        //TODO: Crear un provider y cachear sincronizadores
         Sync sync = AnnotationUtils.findAnnotation(entityClass, Sync.class);
         EntitySynchronizer<T> synchronizer = appContext.getBean(sync.synchronizer());
         Preconditions.checkState(synchronizer != null,
-                "No existe un sincronizador con el nombre: " + sync.synchronizer().getName());
+                "Unable to find synchronizer named: " + sync.synchronizer().getName());
         return synchronizer;
     }
 
     private <T> Comparator<T> getEntityComparator(Class<?> entityClass) {
-        //TODO: Crear un provider y cachear sincronizadores
         try {
             Sync sync = AnnotationUtils.findAnnotation(entityClass, Sync.class);
             return sync.comparator().newInstance();
         } catch (Exception e) {
-            log.warn("No se pudo inicializar el comparador", e);
+            logger.warn("Unable to initialize the comparator", e);
         }
         return new DummyComparator<T>();
     }

@@ -5,7 +5,8 @@ import javax.sql.DataSource;
 /**
  * Provides a {@link DataSource} given a set of configuration parameters
  *
- * Created by ignacios on 11/10/2016.
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public abstract class DataSourceProvider {
 

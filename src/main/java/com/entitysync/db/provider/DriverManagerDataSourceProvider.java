@@ -5,10 +5,11 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import javax.sql.DataSource;
 
 /**
- * Provides an instance of {@link DriverManagerDataSource} given a {@code driverClassName},
- * a {@code databaseUrl}, {@code username} and {@code password}
+ * Provides an instance of {@link DriverManagerDataSource} given a <code>driverClassName</code>,
+ * a <code>databaseUrl</code>, <code>username</code> and <code>password</code>
  *
- * Created by ignsabbag on 08/03/17.
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class DriverManagerDataSourceProvider extends DataSourceProvider {
 

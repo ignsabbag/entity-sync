@@ -3,7 +3,9 @@ package com.entitysync.utils;
 import java.util.Comparator;
 
 /**
- * Created by ignsabbag on 19/02/17.
+ *
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class DummyComparator<T> implements Comparator<T> {
 

@@ -4,7 +4,8 @@ import com.entitysync.annotations.Sync;
 import com.entitysync.utils.EntityUtils;
 import com.entitysync.utils.SyncComparator;
 import com.google.common.collect.Lists;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 
@@ -22,7 +23,6 @@ public class SyncEntities {
 
     private final List<Class<?>> entitiesToSync;
 
-    @Autowired
     public SyncEntities(Set<String> basePackages) {
         ClassPathScanningCandidateComponentProvider scanner =
                 new ClassPathScanningCandidateComponentProvider(false);
@@ -36,6 +36,9 @@ public class SyncEntities {
         }
 
         entitiesToSync.sort(new SyncComparator());
+        
+        Logger logger = LoggerFactory.getLogger(getClass());
+        logger.info("Entities to sync (ordered): " + entitiesToSync);
     }
 
     public List<Class<?>> getEntitiesToSync() {

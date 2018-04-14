@@ -16,11 +16,14 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 
 /**
- * Created by ignsabbag on 09/04/16.
+ * Intercepts an instance before get saved to increment the entity sync version.
+ *
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class SyncInterceptor extends EmptyInterceptor {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private EntityVersionRepository entityVersionRepository;
 
@@ -36,13 +39,13 @@ public class SyncInterceptor extends EmptyInterceptor {
 
     private boolean updateCommitVersion(Object entity, Object[] state, String[] propertyNames) {
         if (isSynchronizedEntity(entity)) {
-            Field field = EntityUtils.getCommitVersionField(entity);
+            Field field = EntityUtils.getSyncVersionField(entity);
             for (int i = 0; i < propertyNames.length; i++) {
                 if (field.getName().equals(propertyNames[i])) {
                     Long commitVersion = getCommitVersion(entity);
                     if (commitVersion != null) {
                         state[i] = commitVersion;
-                        log.debug("New version for entity {}: {}", entity.getClass().getName(), commitVersion);
+                        logger.debug("New version for entity {}: {}", entity.getClass().getName(), commitVersion);
                         return true;
                     }
                     break;
@@ -52,8 +55,12 @@ public class SyncInterceptor extends EmptyInterceptor {
         return false;
     }
 
+    private boolean isSynchronizedEntity(Object entity) {
+        return AnnotationUtils.isAnnotationDeclaredLocally(Sync.class, entity.getClass());
+    }
+
     /**
-     * Incrementa el numero de version de la tabla y retorna el valor para ser guardado en la entidad
+     * Increment the number of version y return the value to be stored on the entity
      */
     private Long getCommitVersion(Object object) {
         if (!DbContextHolder.isLocalDbType() || EntitiesHolder.contains(object.getClass())) {
@@ -69,10 +76,6 @@ public class SyncInterceptor extends EmptyInterceptor {
             }
         }
         return 1L;
-    }
-
-    private boolean isSynchronizedEntity(Object entity) {
-        return AnnotationUtils.isAnnotationDeclaredLocally(Sync.class, entity.getClass());
     }
 
     @Autowired

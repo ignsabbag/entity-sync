@@ -6,7 +6,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 /**
- * Created by ignsabbag on 24/12/16.
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class SyncComparator implements Comparator<Class<?>> {
 

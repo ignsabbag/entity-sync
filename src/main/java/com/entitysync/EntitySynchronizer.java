@@ -3,12 +3,13 @@ package com.entitysync;
 /**
  * Service responsible for updating a entity from another.
  *
- * Created by ignsabbag on 16/04/16.
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public interface EntitySynchronizer<T> {
 
     /**
-     * Creates or update an entity from another.
+     * Creates or update an entity from a database to another.
      * This method must be transactional.
      */
     T updateEntity(T entity);

@@ -1,7 +1,9 @@
 package com.entitysync.model;
 
 /**
- * Created by ignsabbag on 09/04/16.
+ *
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public interface EntityVersionRepository {
 

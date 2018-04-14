@@ -10,14 +10,17 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 /**
- * Created by ignsabbag on 09/04/16.
+ * Default implementation of {@link EntityVersionRepository}
+ *
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class DefaultEntityVersionRepository implements EntityVersionRepository {
 
     private final SessionFactory sessionFactory;
     private final PlatformTransactionManager txManager;
     private final DefaultTransactionDefinition readOnlyTxDefinition;
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public DefaultEntityVersionRepository(SessionFactory sessionFactory, PlatformTransactionManager txManager) {
         this.sessionFactory = sessionFactory;
@@ -63,7 +66,7 @@ public class DefaultEntityVersionRepository implements EntityVersionRepository {
             Query query = sessionFactory.getCurrentSession()
                     .createQuery("delete from " + DefaultEntityVersion.class.getName());
             int deletedRows = query.executeUpdate();
-            log.info("Deleted Rows: " + deletedRows);
+            logger.info("Deleted Rows: " + deletedRows);
             txManager.commit(status);
         } catch(Throwable t) {
             txManager.rollback(status);

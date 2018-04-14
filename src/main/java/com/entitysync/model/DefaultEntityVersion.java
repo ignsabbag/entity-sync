@@ -3,10 +3,12 @@ package com.entitysync.model;
 import javax.persistence.*;
 
 /**
- * Created by ignsabbag on 02/04/18.
+ * Default implementation of {@link AbstractEntityVersion}
+ *
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 @Entity
-@Table(name = "entity_version")
 public class DefaultEntityVersion extends AbstractEntityVersion {
 
     @Id

@@ -20,7 +20,10 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
- * Created by ignsabbag on 11/03/17.
+ * Registers beans to support the synchronization of entities
+ *
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 class SyncBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware {
 

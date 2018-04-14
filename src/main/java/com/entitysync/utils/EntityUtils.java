@@ -5,7 +5,9 @@ import com.entitysync.annotations.SyncVersion;
 import java.lang.reflect.Field;
 
 /**
- * Created by ignsabbag on 08/05/16.
+ *
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class EntityUtils {
 
@@ -17,9 +19,9 @@ public class EntityUtils {
         }
     }
 
-    public static Long getCommitVersion(Object entity) {
+    public static Long getSyncVersion(Object entity) {
         try {
-            Field field = getCommitVersionField(entity);
+            Field field = getSyncVersionField(entity);
             field.setAccessible(true);
             return (Long) field.get(entity);
         } catch (IllegalAccessException e) {
@@ -27,9 +29,9 @@ public class EntityUtils {
         }
     }
 
-    public static void setCommitVersion(Object entity, Long commitVersion) {
+    public static void setSyncVersion(Object entity, Long commitVersion) {
         try {
-            Field field = getCommitVersionField(entity);
+            Field field = getSyncVersionField(entity);
             field.setAccessible(true);
             field.set(entity, commitVersion);
         } catch (IllegalAccessException e) {
@@ -37,11 +39,11 @@ public class EntityUtils {
         }
     }
 
-    public static Field getCommitVersionField(Object entity) {
-        return getCommitVersionField(entity.getClass());
+    public static Field getSyncVersionField(Object entity) {
+        return getSyncVersionField(entity.getClass());
     }
 
-    public static Field getCommitVersionField(Class<?> entityClass) {
+    public static Field getSyncVersionField(Class<?> entityClass) {
         for (Field field : entityClass.getDeclaredFields()) {
             if (field.isAnnotationPresent(SyncVersion.class)) {
                 return field;

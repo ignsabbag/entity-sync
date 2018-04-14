@@ -11,9 +11,10 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Marks a entity as to be synced
+ * Marks a entity to be synced
  *
- * Created by ignsabbag on 08/05/16.
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 @Target(TYPE)
 @Retention(RUNTIME)

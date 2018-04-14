@@ -3,7 +3,8 @@ package com.entitysync.db;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 /**
- * Created by ignsabbag on 12/03/17.
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class SyncRoutingDataSource extends AbstractRoutingDataSource {
 

@@ -1,7 +1,8 @@
 package com.entitysync;
 
 /**
- * Created by ignsabbag on 05/03/17.
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 enum EntitiesHolder {
 

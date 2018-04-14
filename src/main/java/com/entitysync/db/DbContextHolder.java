@@ -6,11 +6,12 @@ import org.slf4j.LoggerFactory;
 /**
  * Holds the selected database for the current thread
  *
- * Created by ignsabbag on 10/04/16.
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 public class DbContextHolder {
 
-    private static final Logger log = LoggerFactory.getLogger(DbContextHolder.class);
+    private static final Logger logger = LoggerFactory.getLogger(DbContextHolder.class);
 
     private static final ThreadLocal<DbType> contextHolder = new ThreadLocal<DbType>();
 
@@ -18,7 +19,7 @@ public class DbContextHolder {
         if(dbType == null){
             throw new NullPointerException();
         }
-        log.trace("Selected Database: " + dbType.name());
+        logger.trace("Selected Database: " + dbType.name());
         contextHolder.set(dbType);
     }
 
@@ -27,7 +28,7 @@ public class DbContextHolder {
     }
 
     public static void clearDbType() {
-        log.trace("Selected Database: None (" + DbType.LOCAL.name() + ")");
+        logger.trace("Selected Database: None (" + DbType.LOCAL.name() + ")");
         contextHolder.remove();
     }
 

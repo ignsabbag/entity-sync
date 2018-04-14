@@ -15,7 +15,14 @@ import javax.sql.DataSource;
 import java.util.Properties;
 
 /**
- * Created by ignsabbag on 02/04/18.
+ * Provides the configuration of the default implementation
+ * for entity <code>EntityVersion</code>.
+ *
+ * The default configuration consist of a H2 embedded database
+ * using Hibernate SessionFactory
+ *
+ * @author Ignacio Sabbag
+ * @since 1.0
  */
 @Configuration
 public class DefaultEntityVersionConfiguration {
@@ -44,7 +51,7 @@ public class DefaultEntityVersionConfiguration {
 
     private Properties hibernateProperties() {
         final Properties properties = new Properties();
-        properties.put("hibernate.show_sql", "true");
+        properties.put("hibernate.show_sql", "false");
         properties.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
         properties.put("hibernate.hbm2ddl.auto", "create");
         return properties;
