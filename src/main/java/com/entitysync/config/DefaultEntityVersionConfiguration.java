@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
@@ -27,18 +28,17 @@ import java.util.Properties;
 @Configuration
 public class DefaultEntityVersionConfiguration {
 
-    @Value("${entitysync.db.path:./entitySync/data}")
-    private String dbPath;
-
     @Bean
-    public SessionFactory sessionFactory() {
-        final LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(dataSource());
+    @Autowired
+    public SessionFactory sessionFactory(Environment env) {
+        final LocalSessionFactoryBuilder sessionBuilder = new LocalSessionFactoryBuilder(
+                dataSource(env.getProperty("entitysync.db.path", "./entitySync/data")));
         sessionBuilder.addAnnotatedClasses(DefaultEntityVersion.class);
         sessionBuilder.addProperties(hibernateProperties());
         return sessionBuilder.buildSessionFactory();
     }
 
-    private DataSource dataSource() {
+    private DataSource dataSource(String dbPath) {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
 
         dataSource.setDriverClassName("org.h2.Driver");
