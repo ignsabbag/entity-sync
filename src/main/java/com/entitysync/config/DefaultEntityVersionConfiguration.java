@@ -4,7 +4,6 @@ import com.entitysync.model.DefaultEntityVersion;
 import com.entitysync.model.DefaultEntityVersionRepository;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -53,7 +52,7 @@ public class DefaultEntityVersionConfiguration {
         final Properties properties = new Properties();
         properties.put("hibernate.show_sql", "false");
         properties.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-        properties.put("hibernate.hbm2ddl.auto", "create");
+        properties.put("hibernate.hbm2ddl.auto", "update");
         return properties;
     }
 
