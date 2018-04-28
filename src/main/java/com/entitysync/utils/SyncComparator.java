@@ -33,7 +33,7 @@ public class SyncComparator implements Comparator<Class<?>> {
                 return result;
             }
         }
-        return 0;
+        return sync1.dependsOn().length - sync2.dependsOn().length;
     }
 
 }
