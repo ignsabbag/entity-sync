@@ -124,10 +124,10 @@ public class SyncService implements ApplicationContextAware {
         //Filtro las entidades modificadas localmente
         remoteEntities.removeAll(dirtyEntities);
 
-        logger.info("Updating " + remoteEntities.size() + " entities modified remotely");
+        logger.debug("Updating " + remoteEntities.size() + " entities modified remotely");
         entityVersion = updateEntities(entityVersion, remoteEntities);
 
-        logger.info("Updating " + dirtyEntities.size() + " entities modified locally");
+        logger.debug("Updating " + dirtyEntities.size() + " entities modified locally");
         commitEntities(entityVersion, dirtyEntities);
     }
 
@@ -149,7 +149,7 @@ public class SyncService implements ApplicationContextAware {
     }
 
     private <T> void updateEntity(T entity, EntitySynchronizer<T> synchronizer, AbstractEntityVersion entityVersion) {
-        logger.info("Updating entity: " + entity.toString());
+        logger.info("Updating local entity: " + entity.toString());
         synchronizer.updateEntity(entity);
         Long commitVersion = EntityUtils.getSyncVersion(entity);
         if (entityVersion.getUpdateVersion() < commitVersion) {
@@ -172,7 +172,7 @@ public class SyncService implements ApplicationContextAware {
     }
 
     private <T> void commitEntity(T entity, EntitySynchronizer<T> synchronizer, AbstractEntityVersion entityVersion) {
-        logger.info("Updating entity: " + entity.toString());
+        logger.info("Updating remote entity: " + entity.toString());
         Long nextVersion = entityVersion.incCommitVersion();
         EntityUtils.setSyncVersion(entity, nextVersion);
         doInCentral(() -> synchronizer.updateEntity(entity));
