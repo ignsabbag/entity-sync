@@ -2,7 +2,6 @@ package com.entitysync;
 
 import com.entitysync.annotations.Sync;
 import com.entitysync.db.DbContextHolder;
-import com.entitysync.db.DbType;
 import com.entitysync.model.AbstractEntityVersion;
 import com.entitysync.model.EntityVersionRepository;
 import com.entitysync.utils.DummyComparator;
@@ -24,7 +23,8 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Supplier;
+
+import static com.entitysync.utils.CentralCommand.doInCentral;
 
 /**
  * @author Ignacio Sabbag
@@ -72,7 +72,9 @@ public class SyncEntityService implements ApplicationContextAware {
         String commitVersionField = EntityUtils.getSyncVersionField(entityVersion.getEntity()).getName();
         cq.where(
                 cb.or(
-                        cb.greaterThan(entity.get(commitVersionField), entityVersion.getUpdateVersion()),
+                        cb.greaterThan(
+                                entity.get(commitVersionField),
+                                entityVersion.getUpdateVersion()),
                         cb.isNull(entity.get(commitVersionField))));
         List result = entityManager.createQuery(cq).getResultList();
         logger.debug(result.size() + " entities found");
@@ -154,16 +156,6 @@ public class SyncEntityService implements ApplicationContextAware {
             logger.warn("Unable to initialize the comparator", e);
         }
         return new DummyComparator<T>();
-    }
-
-    @Transactional
-    private <T> T doInCentral(Supplier<T> supplier) {
-        try {
-            DbContextHolder.setDbType(DbType.CENTRAL);
-            return supplier.get();
-        } finally {
-            DbContextHolder.clearDbType();
-        }
     }
 
     @Override
