@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
  * Created by nacho on 09/04/18.
  */
 @Component
-public class ProductSynchronizer implements EntitySynchronizer<Product> {
+public class UserSynchronizer implements EntitySynchronizer<User> {
 
     @Override
-    public Product updateEntity(Product entity) {
+    public User updateEntity(User entity) {
         return null;
     }
 }

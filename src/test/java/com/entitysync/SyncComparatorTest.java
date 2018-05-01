@@ -3,6 +3,7 @@ package com.entitysync;
 import com.entitysync.data.Brand;
 import com.entitysync.data.CustomerOrder;
 import com.entitysync.data.Product;
+import com.entitysync.data.User;
 import com.entitysync.utils.SyncComparator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,8 +22,8 @@ public class SyncComparatorTest {
 
     @Test
     public void testComparator() {
-        List<Class<?>> unsorted = Arrays.asList(CustomerOrder.class, Brand.class, Product.class);
-        List<Class<?>> sorted = Arrays.asList(Brand.class, Product.class, CustomerOrder.class);
+        List<Class<?>> unsorted = Arrays.asList(CustomerOrder.class, User.class, Brand.class, Product.class);
+        List<Class<?>> sorted = Arrays.asList(User.class, Brand.class, Product.class, CustomerOrder.class);
         unsorted.sort(new SyncComparator());
         assertThat(unsorted, is(sorted));
     }
