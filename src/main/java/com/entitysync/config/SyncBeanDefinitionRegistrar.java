@@ -1,5 +1,6 @@
 package com.entitysync.config;
 
+import com.entitysync.SyncEntityService;
 import com.entitysync.SyncInterceptor;
 import com.entitysync.SyncService;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
@@ -50,6 +51,7 @@ class SyncBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, Envi
         }
 
         registerSyncEntitiesBean(basePackages, registry);
+        registerSyncEntityServiceBean(registry);
         registerSyncServiceBean(registry);
         registerSyncInterceptorBean(registry);
     }
@@ -76,6 +78,17 @@ class SyncBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, Envi
             gbd.setAutowireCandidate(true);
 
             registry.registerBeanDefinition("syncEntities", gbd);
+        }
+    }
+
+    private void registerSyncEntityServiceBean(BeanDefinitionRegistry registry) {
+        if (!registry.containsBeanDefinition("syncEntityService")) {
+            RootBeanDefinition gbd = new RootBeanDefinition(SyncEntityService.class);
+            gbd.setRole(AbstractBeanDefinition.ROLE_SUPPORT);
+            gbd.setLazyInit(false);
+            gbd.setAutowireCandidate(true);
+            gbd.setScope("singleton");
+            registry.registerBeanDefinition("syncEntityService", gbd);
         }
     }
 
