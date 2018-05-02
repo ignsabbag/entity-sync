@@ -2,6 +2,7 @@ package com.entitysync;
 
 import com.entitysync.annotations.Sync;
 import com.entitysync.db.DbContextHolder;
+import com.entitysync.db.DbType;
 import com.entitysync.model.AbstractEntityVersion;
 import com.entitysync.model.EntityVersionRepository;
 import com.entitysync.utils.DummyComparator;
@@ -23,8 +24,7 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.util.Comparator;
 import java.util.List;
-
-import static com.entitysync.utils.CentralCommand.doInCentral;
+import java.util.function.Supplier;
 
 /**
  * @author Ignacio Sabbag
@@ -156,6 +156,16 @@ public class SyncEntityService implements ApplicationContextAware {
             logger.warn("Unable to initialize the comparator", e);
         }
         return new DummyComparator<T>();
+    }
+
+    @Transactional
+    private <T> T doInCentral(Supplier<T> supplier) {
+        try {
+            DbContextHolder.setDbType(DbType.CENTRAL);
+            return supplier.get();
+        } finally {
+            DbContextHolder.clearDbType();
+        }
     }
 
     @Override
