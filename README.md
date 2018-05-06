@@ -51,5 +51,13 @@ To start using the library:
             private Long syncVersion;
             ...
     ```
-
+- To starts the syncronization, you can autowire SyncService or SyncEntityService to sync all your entities o one of them
+    ```
+        syncService.syncEntities()
+        
+        or
+        
+        syncEntityService.syncEntity(Brand.class);
+    ```
+    
 EntitySync uses a embedded H2 database in order to store the last version updated from central and the last version committed to central. The EntitySync DB path is "entitySync/data" and is located on the application path.
