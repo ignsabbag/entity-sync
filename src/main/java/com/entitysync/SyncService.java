@@ -8,6 +8,7 @@ import com.github.rholder.retry.StopStrategies;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import javax.persistence.OptimisticLockException;
 import java.util.concurrent.ExecutionException;
@@ -18,6 +19,7 @@ import java.util.concurrent.ExecutionException;
  * @author Ignacio Sabbag
  * @since 1.0
  */
+@Service
 public class SyncService {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -35,9 +37,7 @@ public class SyncService {
     }
 
     /**
-     * Starts the synchronization. First check if there are entities
-     * in the central database, update them into local database
-     * and send to central database the local changes
+     * Starts the synchronization for all entities.
      *
      * @return the number of entities that could not be synchronized
      */
@@ -46,6 +46,7 @@ public class SyncService {
         int errors = 0;
         for (Class<?> entityClass : syncEntities.getEntitiesToSync()) {
             try {
+                EntitiesHolder.set(entityClass);
                 getRetryer().call(() -> syncEntitiesForClass(entityClass));
             } catch (RetryException e) {
                 errors++;
@@ -61,8 +62,9 @@ public class SyncService {
         return errors;
     }
 
-    public Void syncEntitiesForClass(Class<?> entityClass) {
-        return syncEntityService.syncEntitiesForClass(entityClass);
+    private Void syncEntitiesForClass(Class<?> entityClass) {
+        syncEntityService.syncEntity(entityClass);
+        return null;
     }
 
     private Retryer<Void> getRetryer() {

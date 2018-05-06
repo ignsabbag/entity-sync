@@ -5,6 +5,7 @@ import com.entitysync.db.DbContextHolder;
 import com.entitysync.db.DbType;
 import com.entitysync.model.AbstractEntityVersion;
 import com.entitysync.model.EntityVersionRepository;
+import com.entitysync.model.SyncEntityRepository;
 import com.entitysync.utils.DummyComparator;
 import com.entitysync.utils.EntityUtils;
 import com.google.common.base.Preconditions;
@@ -17,11 +18,6 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
@@ -35,54 +31,39 @@ public class SyncEntityService implements ApplicationContextAware {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     private final EntityVersionRepository entityVersionRepository;
+    private final SyncEntityRepository syncEntityRepository;
 
     private ApplicationContext appContext;
 
-    SyncEntityService(EntityVersionRepository entityVersionRepository) {
+    SyncEntityService(EntityVersionRepository entityVersionRepository, SyncEntityRepository syncEntityRepository) {
         this.entityVersionRepository = entityVersionRepository;
+        this.syncEntityRepository = syncEntityRepository;
     }
 
-
-    Void syncEntitiesForClass(Class<?> entityClass) {
+    /**
+     * Starts synchronization for the entity.
+     * First check if there are entities
+     * in the central database, update them into local database
+     * and send to central database the local changes
+     */
+    public <T> void syncEntity(Class<T> entityClass) {
         DbContextHolder.clearDbType();
         AbstractEntityVersion entityVersion = entityVersionRepository.getEntityVersion(entityClass);
-        logger.trace("Starting the synchronization of the entity " + entityVersion.getEntity().toString());
+        logger.trace("Starting the synchronization of entity " + entityVersion.getEntity().toString());
 
         logger.debug("Searching for locally modified entities...");
-        List dirtyEntities = loadEntities(entityVersion);
+        List<T> dirtyEntities = syncEntityRepository.loadEntities(entityClass, entityVersion.getUpdateVersion());
 
         logger.debug("Searching for remotely modified entities...");
-        List remoteEntities = doInCentral(() -> loadEntities(entityVersion));
+        List<T> remoteEntities = doInCentral(() ->
+                syncEntityRepository.loadEntities(entityClass, entityVersion.getUpdateVersion()));
 
-        EntitiesHolder.set(entityClass);
         perform(entityVersion, dirtyEntities, remoteEntities);
-
-        return null;
-    }
-
-    @Transactional
-    private List loadEntities(AbstractEntityVersion entityVersion) {
-        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        CriteriaQuery cq = cb.createQuery(entityVersion.getEntity());
-        Root<?> entity = cq.from(entityVersion.getEntity());
-        String commitVersionField = EntityUtils.getSyncVersionField(entityVersion.getEntity()).getName();
-        cq.where(
-                cb.or(
-                        cb.greaterThan(
-                                entity.get(commitVersionField),
-                                entityVersion.getUpdateVersion()),
-                        cb.isNull(entity.get(commitVersionField))));
-        List result = entityManager.createQuery(cq).getResultList();
-        logger.debug(result.size() + " entities found");
-        return result;
     }
 
     private <T> void perform(AbstractEntityVersion entityVersion, List<T> dirtyEntities, List<T> remoteEntities) {
-        //Filtro las entidades modificadas localmente
+        //Remove locally modified entities
         remoteEntities.removeAll(dirtyEntities);
 
         logger.debug("Updating " + remoteEntities.size() + " entities modified remotely");
@@ -96,8 +77,10 @@ public class SyncEntityService implements ApplicationContextAware {
     private <T> AbstractEntityVersion updateEntities(AbstractEntityVersion entityVersion, List<T> remoteEntities) {
         EntitySynchronizer<T> synchronizer = getEntitySynchronizer(entityVersion.getEntity());
         logger.trace("Using syncronizer: " + synchronizer.getClass().getName());
+
         Comparator<T> comparator = getEntityComparator(entityVersion.getEntity());
         logger.trace("Using comparator: " + comparator.getClass().getName());
+
         remoteEntities.sort(comparator);
         remoteEntities.forEach(entity -> updateEntity(entity, synchronizer, entityVersion));
 
@@ -121,8 +104,10 @@ public class SyncEntityService implements ApplicationContextAware {
     private <T> void commitEntities(AbstractEntityVersion entityVersion, List<T> entities) {
         EntitySynchronizer<T> synchronizer = getEntitySynchronizer(entityVersion.getEntity());
         logger.trace("Using syncronizer: " + synchronizer.getClass().getName());
+
         Comparator<T> comparator = getEntityComparator(entityVersion.getEntity());
         logger.trace("Using comparator: " + comparator.getClass().getName());
+
         entities.sort(comparator);
         entities.forEach(entity -> commitEntity(entity, synchronizer, entityVersion));
 
