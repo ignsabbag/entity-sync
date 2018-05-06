@@ -1,8 +1,5 @@
 package com.entitysync.config;
 
-import com.entitysync.SyncEntityService;
-import com.entitysync.SyncInterceptor;
-import com.entitysync.SyncService;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -51,9 +48,6 @@ class SyncBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, Envi
         }
 
         registerSyncEntitiesBean(basePackages, registry);
-        registerSyncEntityServiceBean(registry);
-        registerSyncServiceBean(registry);
-        registerSyncInterceptorBean(registry);
     }
 
     private Set<String> getTokenizedBasePackages(String[] basePackagesArray) {
@@ -78,39 +72,6 @@ class SyncBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar, Envi
             gbd.setAutowireCandidate(true);
 
             registry.registerBeanDefinition("syncEntities", gbd);
-        }
-    }
-
-    private void registerSyncEntityServiceBean(BeanDefinitionRegistry registry) {
-        if (!registry.containsBeanDefinition("syncEntityService")) {
-            RootBeanDefinition gbd = new RootBeanDefinition(SyncEntityService.class);
-            gbd.setRole(AbstractBeanDefinition.ROLE_SUPPORT);
-            gbd.setLazyInit(false);
-            gbd.setAutowireCandidate(true);
-            gbd.setScope("singleton");
-            registry.registerBeanDefinition("syncEntityService", gbd);
-        }
-    }
-
-    private void registerSyncServiceBean(BeanDefinitionRegistry registry) {
-        if (!registry.containsBeanDefinition("syncService")) {
-            RootBeanDefinition gbd = new RootBeanDefinition(SyncService.class);
-            gbd.setRole(AbstractBeanDefinition.ROLE_APPLICATION);
-            gbd.setLazyInit(false);
-            gbd.setAutowireCandidate(true);
-            gbd.setScope("singleton");
-            registry.registerBeanDefinition("syncService", gbd);
-        }
-    }
-
-    private void registerSyncInterceptorBean(BeanDefinitionRegistry registry) {
-        if (!registry.containsBeanDefinition("syncInterceptor")) {
-            RootBeanDefinition gbd = new RootBeanDefinition(SyncInterceptor.class);
-            gbd.setRole(AbstractBeanDefinition.ROLE_SUPPORT);
-            gbd.setLazyInit(false);
-            gbd.setAutowireCandidate(true);
-            gbd.setScope("singleton");
-            registry.registerBeanDefinition("syncInterceptor", gbd);
         }
     }
 

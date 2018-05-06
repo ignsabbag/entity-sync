@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -21,6 +22,7 @@ import java.lang.reflect.Field;
  * @author Ignacio Sabbag
  * @since 1.0
  */
+@Service
 public class SyncInterceptor extends EmptyInterceptor {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
